@@ -59,14 +59,15 @@ const updateRumahTangga = async (req: Request, res: Response) => {
 const deleteRumahTangga = async (req: Request, res: Response) => {
   try {
     const id = req.params.id;
-    if (!mongoose.Types.ObjectId.isValid(id)) {
+    const objectId = new mongoose.Types.ObjectId(id);
+
+    if (!mongoose.Types.ObjectId.isValid(objectId)) {
       return res.status(400).json({
         statusCode: 400,
         message: "Invalid ID format",
       });
     }
-
-    const objectId = new mongoose.Types.ObjectId(id);
+    
     const deletedRumahTangga = await rumahTanggaService.deleteRumahTangga(objectId);
     
     if (!deletedRumahTangga) {
