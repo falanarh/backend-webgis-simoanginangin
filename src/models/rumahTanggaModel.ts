@@ -60,7 +60,7 @@ interface IRumahTangga extends Document {
 // Define schema
 const RumahTanggaSchema: Schema = new Schema({
   // Define `kode` as the primary key
-  kode: { type: String, required: true, unique: true },
+  kode: { type: String },
   kodeRt: { type: String, required: true },
   rt_rw_dusun: { type: String, required: true },
   nama_kepala_keluarga: { type: String, required: true },
@@ -148,7 +148,7 @@ const RumahTanggaSchema: Schema = new Schema({
 });
 
 // Ensure unique index for kode
-RumahTanggaSchema.index({ kode: 1 }, { unique: true });
+// RumahTanggaSchema.index({ kode: 1 }, { unique: true });
 
 // Create model
 export { IRumahTangga };

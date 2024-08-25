@@ -1,6 +1,6 @@
 import { Request, Response } from "express";
+import mongoose from "mongoose";  // Import mongoose for ObjectId
 import rumahTanggaService from "../services/rumahTanggaService";
-import updateAllRtAggregates from "../services/rtAndRutaService";
 
 const addRumahTangga = async (req: Request, res: Response) => {
   try {
@@ -21,16 +21,27 @@ const addRumahTangga = async (req: Request, res: Response) => {
 
 const updateRumahTangga = async (req: Request, res: Response) => {
   try {
+    const id = req.params.id;
+    if (!mongoose.Types.ObjectId.isValid(id)) {
+      return res.status(400).json({
+        statusCode: 400,
+        message: "Invalid ID format",
+      });
+    }
+    
+    const objectId = new mongoose.Types.ObjectId(id);
     const updatedRumahTangga = await rumahTanggaService.updateRumahTangga(
-      req.params.kode,
+      objectId,
       req.body
     );
+    
     if (!updatedRumahTangga) {
       return res.status(404).json({
         statusCode: 404,
         message: "RumahTangga not found",
       });
     }
+
     res.status(200).json({
       statusCode: 200,
       message: "RumahTangga updated successfully",
@@ -46,15 +57,24 @@ const updateRumahTangga = async (req: Request, res: Response) => {
 
 const deleteRumahTangga = async (req: Request, res: Response) => {
   try {
-    const deletedRumahTangga = await rumahTanggaService.deleteRumahTangga(
-      req.params.kode
-    );
+    const id = req.params.id;
+    if (!mongoose.Types.ObjectId.isValid(id)) {
+      return res.status(400).json({
+        statusCode: 400,
+        message: "Invalid ID format",
+      });
+    }
+
+    const objectId = new mongoose.Types.ObjectId(id);
+    const deletedRumahTangga = await rumahTanggaService.deleteRumahTangga(objectId);
+    
     if (!deletedRumahTangga) {
       return res.status(404).json({
         statusCode: 404,
         message: "RumahTangga not found",
       });
     }
+
     res.status(200).json({
       statusCode: 200,
       message: "RumahTangga deleted successfully",
@@ -112,6 +132,6 @@ export default {
   addRumahTangga,
   updateRumahTangga,
   deleteRumahTangga,
-  getRumahTanggaByKode, // Perubahan di sini
+  getRumahTanggaByKode,
   getAllRumahTangga,
 };

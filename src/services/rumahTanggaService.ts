@@ -91,42 +91,93 @@ const validateRumahTanggaData = (data: IRumahTangga) => {
   }
 };
 
+const generateNewKode = async (kodeRt: string) => {
+  // Temukan nilai kode terbesar untuk kodeRt yang sama
+  const latestRumahTangga = await RumahTangga.findOne({
+    kode: new RegExp(`^${kodeRt}`),
+  })
+    .sort({ kode: -1 })  // Urutkan dari yang terbesar
+    .limit(1); // Ambil hanya satu
+
+  if (!latestRumahTangga) {
+    // Jika tidak ada data sebelumnya, mulai dari kodeRt + '001'
+    return `${kodeRt}001`;
+  }
+
+  const latestKode = latestRumahTangga.kode;
+  const kodeWithoutRt = latestKode.substring(kodeRt.length);
+  const incrementedKode = (parseInt(kodeWithoutRt, 10) + 1).toString().padStart(3, '0');
+
+  return `${kodeRt}${incrementedKode}`;
+};
+
 const addRumahTangga = async (data: IRumahTangga | IRumahTangga[]) => {
   const dataArray = Array.isArray(data) ? data : [data];
   const session = await mongoose.startSession();
+  let newRumahTangga: IRumahTangga[] = [];
+  let allUpdatedRumahTangga: IRumahTangga[] = [];
 
   try {
     session.startTransaction();
 
     console.log("Validasi dan pencarian RT dimulai...");
-    
+
     // Validasi data sebelum melakukan operasi database
     for (const item of dataArray) {
       validateRumahTanggaData(item);
+
       const rt = await Rt.findOne({ kode: item.kodeRt }).session(session);
       if (!rt) {
-        throw new Error(
-          `RT dengan kode ${item.kodeRt} tidak ditemukan. Pastikan kode RT yang dimasukkan benar.`
-        );
+        throw new Error(`RT dengan kode ${item.kodeRt} tidak ditemukan. Pastikan kode RT yang dimasukkan benar.`);
       }
+
+      // Generate kode baru dengan pengecekan duplikasi
+      let newKode;
+      do {
+        newKode = await generateNewKode(item.kodeRt);
+      } while (await RumahTangga.exists({ kode: newKode }));
+
+      item.kode = newKode;
+
+      // Simpan data sementara
+      newRumahTangga.push(item);
     }
 
     console.log("Semua data valid, menyimpan data rumah tangga...");
 
     // Menyimpan data ke database
-    const newRumahTangga = await RumahTangga.insertMany(dataArray, { session });
+    await RumahTangga.insertMany(newRumahTangga, { session });
 
     console.log("Data rumah tangga berhasil disimpan. Memperbarui agregat RT...");
+
+    // Mendapatkan semua kode RT yang ada dalam newRumahTangga
+    const kodeRtList = [...new Set(newRumahTangga.map(item => item.kodeRt))];
+
+    for (const kodeRt of kodeRtList) {
+      // Ambil semua rumah tangga dengan kode RT yang sama
+      const rumahTanggaList = await RumahTangga.find({ kodeRt }).sort({ kode: 1 }).session(session);
+      
+      let nextKodeNumber = 1;
+      for (const rumahTangga of rumahTanggaList) {
+        const newKode = `${kodeRt}${nextKodeNumber.toString().padStart(3, '0')}`;
+        rumahTangga.kode = newKode;
+        nextKodeNumber++;
+      }
+
+      // Update kode rumah tangga di database
+      await Promise.all(rumahTanggaList.map(rumahTangga => rumahTangga.save({ session })));
+      allUpdatedRumahTangga = allUpdatedRumahTangga.concat(rumahTanggaList);
+    }
 
     await session.commitTransaction();
     session.endSession();
 
-     // Perbarui agregat RT setelah menyimpan data
-     await updateAllRtAggregates();
+    // Perbarui agregat RT setelah menyimpan data
+    await updateAllRtAggregates();
 
-     console.log("Agregat RT berhasil diperbarui.");
+    console.log("Agregat RT berhasil diperbarui.");
 
-    return newRumahTangga;
+    return allUpdatedRumahTangga;
   } catch (error) {
     await session.abortTransaction();
     session.endSession();
@@ -142,11 +193,12 @@ const addRumahTangga = async (data: IRumahTangga | IRumahTangga[]) => {
   }
 };
 
-const updateRumahTangga = async (kode: string, data: IRumahTangga) => {
+
+const updateRumahTangga = async (id: mongoose.Types.ObjectId, data: IRumahTangga) => {
   validateRumahTanggaData(data);
 
-  const updatedRumahTangga = await RumahTangga.findOneAndUpdate(
-    { kode },
+  const updatedRumahTangga = await RumahTangga.findByIdAndUpdate(
+    id,
     data,
     { new: true }
   );
@@ -154,20 +206,20 @@ const updateRumahTangga = async (kode: string, data: IRumahTangga) => {
     await updateAllRtAggregates();
   } else {
     throw new Error(
-      "Keluarga UMKM dengan kode tersebut tidak ditemukan. Pastikan kode yang dimasukkan benar."
+      "Keluarga UMKM dengan ID tersebut tidak ditemukan. Pastikan ID yang dimasukkan benar."
     );
   }
 
   return updatedRumahTangga;
 };
 
-const deleteRumahTangga = async (kode: string) => {
-  const rumahTangga = await RumahTangga.findOneAndDelete({ kode });
+const deleteRumahTangga = async (id: mongoose.Types.ObjectId) => {
+  const rumahTangga = await RumahTangga.findByIdAndDelete(id);
   if (rumahTangga) {
     await updateAllRtAggregates();
   } else {
     throw new Error(
-      "Keluarga UMKM dengan kode tersebut tidak ditemukan. Pastikan kode yang dimasukkan benar."
+      "Keluarga UMKM dengan ID tersebut tidak ditemukan. Pastikan ID yang dimasukkan benar."
     );
   }
 
