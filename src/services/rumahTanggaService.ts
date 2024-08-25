@@ -144,6 +144,7 @@ const addRumahTangga = async (data: IRumahTangga | IRumahTangga[]) => {
     }
 
     console.log("Semua data valid, menyimpan data rumah tangga...");
+    console.log("Banyaknya data yang akan disimpan:", newRumahTangga.length);
 
     // Menyimpan data ke database
     await RumahTangga.insertMany(newRumahTangga, { session });
