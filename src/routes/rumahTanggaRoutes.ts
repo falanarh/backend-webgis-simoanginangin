@@ -5,8 +5,8 @@ import authMiddleware from "../middleware/authMiddleware";
 const router = express.Router();
 
 router.post("/", authMiddleware, rumahTanggaController.addRumahTangga);
-router.put("/:kode", authMiddleware, rumahTanggaController.updateRumahTangga);
-router.delete("/:kode", authMiddleware, rumahTanggaController.deleteRumahTangga);
+router.put("/:id", authMiddleware, rumahTanggaController.updateRumahTangga);
+router.delete("/:id", authMiddleware, rumahTanggaController.deleteRumahTangga);
 router.get("/:kode", authMiddleware, rumahTanggaController.getRumahTanggaByKode);
 router.get("/", rumahTanggaController.getAllRumahTangga);
 
