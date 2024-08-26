@@ -215,16 +215,57 @@ const updateRumahTangga = async (id: mongoose.Types.ObjectId, data: IRumahTangga
 };
 
 const deleteRumahTangga = async (id: mongoose.Types.ObjectId) => {
-  const rumahTangga = await RumahTangga.findByIdAndDelete(id);
-  if (rumahTangga) {
-    await updateAllRtAggregates();
-  } else {
-    throw new Error(
-      "Keluarga UMKM dengan ID tersebut tidak ditemukan. Pastikan ID yang dimasukkan benar."
-    );
-  }
+  const session = await mongoose.startSession();
+  session.startTransaction();
+  let deletedRumahTangga;
+  
+  try {
+    // Hapus rumah tangga berdasarkan ID
+    deletedRumahTangga = await RumahTangga.findByIdAndDelete(id).session(session);
+    
+    if (!deletedRumahTangga) {
+      throw new Error(
+        "Keluarga UMKM dengan ID tersebut tidak ditemukan. Pastikan ID yang dimasukkan benar."
+      );
+    }
 
-  return rumahTangga;
+    const kodeRt = deletedRumahTangga.kodeRt;
+
+    // Ambil semua rumah tangga dengan kode RT yang sama
+    const rumahTanggaList = await RumahTangga.find({ kodeRt }).sort({ kode: 1 }).session(session);
+
+    // Urutkan ulang kode rumah tangga
+    let nextKodeNumber = 1;
+    for (const rumahTangga of rumahTanggaList) {
+      const newKode = `${kodeRt}${nextKodeNumber.toString().padStart(3, '0')}`;
+      rumahTangga.kode = newKode;
+      nextKodeNumber++;
+    }
+
+    // Update kode rumah tangga di database
+    await Promise.all(rumahTanggaList.map(rumahTangga => rumahTangga.save({ session })));
+
+    // Perbarui agregat RT setelah perubahan
+    await updateAllRtAggregates();
+
+    // Commit transaksi
+    await session.commitTransaction();
+    session.endSession();
+
+    return deletedRumahTangga;
+  } catch (error) {
+    await session.abortTransaction();
+    session.endSession();
+
+    // Logging kesalahan
+    if (error instanceof Error) {
+      console.error(`Gagal menghapus data keluarga UMKM: ${error.message}`);
+      throw new Error(`Gagal menghapus data keluarga UMKM: ${error.message}`);
+    } else {
+      console.error("Gagal menghapus data keluarga UMKM: Unknown error");
+      throw new Error("Gagal menghapus data keluarga UMKM: Unknown error");
+    }
+  }
 };
 
 const getRumahTanggaByKode = async (kode: string) => {
