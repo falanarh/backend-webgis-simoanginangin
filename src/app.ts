@@ -28,7 +28,7 @@ app.use(
     origin: [
       "https://desa-cantik-sda.vercel.app",
       "http://localhost:5173",
-      "http://desacantik.pahlawan140.com",
+      "https://desacantik.pahlawan140.com",
     ], // Ganti dengan domain Anda
     methods: ["GET", "POST", "PUT", "DELETE"], // Metode yang diizinkan
     allowedHeaders: ["Content-Type", "Authorization"],
