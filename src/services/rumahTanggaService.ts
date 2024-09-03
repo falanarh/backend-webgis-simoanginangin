@@ -268,10 +268,10 @@ const deleteRumahTangga = async (id: mongoose.Types.ObjectId) => {
   }
 };
 
-const getRumahTanggaByKode = async (kode: string) => {
-  const rumahTangga = await RumahTangga.findOne({ kode });
+const getRumahTanggaById = async (id: mongoose.Types.ObjectId) => {
+  const rumahTangga = await RumahTangga.findOne({ _id: id });
   if (!rumahTangga) {
-    throw new Error("Keluarga UMKM dengan kode tersebut tidak ditemukan.");
+    throw new Error("Keluarga UMKM dengan ID tersebut tidak ditemukan.");
   }
   return rumahTangga;
 };
@@ -280,10 +280,21 @@ const getAllRumahTangga = async () => {
   return await RumahTangga.find().sort({ kode: 1 });
 };
 
+const getAllRumahTanggaIds = async () => {
+  try {
+    // Mengambil semua rumah tangga dan hanya menyertakan field '_id'
+    const rumahTanggaList = await RumahTangga.find({}, { _id: 1 });
+    return rumahTanggaList.map(rumahTangga => rumahTangga._id);
+  } catch (error) {
+    throw new Error(`Gagal mendapatkan ID rumah tangga: ${(error as Error).message}`);
+  }
+};
+
 export default {
   addRumahTangga,
   updateRumahTangga,
   deleteRumahTangga,
-  getRumahTanggaByKode,
+  getRumahTanggaById,
   getAllRumahTangga,
+  getAllRumahTanggaIds,
 };

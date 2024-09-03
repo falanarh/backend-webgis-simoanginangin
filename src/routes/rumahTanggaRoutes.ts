@@ -7,7 +7,8 @@ const router = express.Router();
 router.post("/", authMiddleware, rumahTanggaController.addRumahTangga);
 router.put("/:id", authMiddleware, rumahTanggaController.updateRumahTangga);
 router.delete("/:id", authMiddleware, rumahTanggaController.deleteRumahTangga);
-router.get("/:kode", authMiddleware, rumahTanggaController.getRumahTanggaByKode);
+router.get("/:id", rumahTanggaController.getRumahTanggaById);
 router.get("/", rumahTanggaController.getAllRumahTangga);
+router.get("/ids", rumahTanggaController.getAllRumahTanggaIds);
 
 export default router;

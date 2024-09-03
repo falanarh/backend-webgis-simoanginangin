@@ -1,5 +1,5 @@
 import { Request, Response } from "express";
-import mongoose from "mongoose";  // Import mongoose for ObjectId
+import mongoose from "mongoose"; // Import mongoose for ObjectId
 import rumahTanggaService from "../services/rumahTanggaService";
 
 const addRumahTangga = async (req: Request, res: Response) => {
@@ -30,12 +30,12 @@ const updateRumahTangga = async (req: Request, res: Response) => {
         message: "Invalid ID format",
       });
     }
-    
+
     const updatedRumahTangga = await rumahTanggaService.updateRumahTangga(
       objectId,
       req.body
     );
-    
+
     if (!updatedRumahTangga) {
       return res.status(404).json({
         statusCode: 404,
@@ -67,9 +67,11 @@ const deleteRumahTangga = async (req: Request, res: Response) => {
         message: "Invalid ID format",
       });
     }
-    
-    const deletedRumahTangga = await rumahTanggaService.deleteRumahTangga(objectId);
-    
+
+    const deletedRumahTangga = await rumahTanggaService.deleteRumahTangga(
+      objectId
+    );
+
     if (!deletedRumahTangga) {
       return res.status(404).json({
         statusCode: 404,
@@ -90,11 +92,20 @@ const deleteRumahTangga = async (req: Request, res: Response) => {
   }
 };
 
-const getRumahTanggaByKode = async (req: Request, res: Response) => {
+const getRumahTanggaById = async (req: Request, res: Response) => {
   try {
-    const rumahTangga = await rumahTanggaService.getRumahTanggaByKode(
-      req.params.kode
-    );
+    const id = req.params.id;
+    const objectId = new mongoose.Types.ObjectId(id);
+
+    if (!mongoose.Types.ObjectId.isValid(objectId)) {
+      return res.status(400).json({
+        statusCode: 400,
+        message: "Invalid ID format",
+      });
+    }
+
+    const rumahTangga = await rumahTanggaService.getRumahTanggaById(objectId);
+
     if (!rumahTangga) {
       return res.status(404).json({
         statusCode: 404,
@@ -130,10 +141,27 @@ const getAllRumahTangga = async (req: Request, res: Response) => {
   }
 };
 
+const getAllRumahTanggaIds = async (req: Request, res: Response) => {
+  try {
+    const ids = await rumahTanggaService.getAllRumahTanggaIds();
+    res.status(200).json({
+      statusCode: 200,
+      message: "ID RumahTangga fetched successfully",
+      data: ids,
+    });
+  } catch (error: any) {
+    res.status(500).json({
+      statusCode: 500,
+      message: error.message,
+    });
+  }
+};
+
 export default {
   addRumahTangga,
   updateRumahTangga,
   deleteRumahTangga,
-  getRumahTanggaByKode,
+  getRumahTanggaById,
   getAllRumahTangga,
+  getAllRumahTanggaIds,
 };
