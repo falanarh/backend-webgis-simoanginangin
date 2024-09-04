@@ -280,13 +280,44 @@ const getAllRumahTangga = async () => {
   return await RumahTangga.find().sort({ kode: 1 });
 };
 
-const getAllRumahTanggaIds = async () => {
+const getAllRumahTanggaIds = async (filters: {
+  kodeRt?: string;
+  kategori_usaha?: string;
+  lokasi_tempat_usaha?: string;
+  skala_usaha?: string;
+}) => {
   try {
-    // Mengambil semua rumah tangga dan hanya menyertakan field '_id'
-    const rumahTanggaList = await RumahTangga.find({}, { _id: 1 });
-    return rumahTanggaList.map(rumahTangga => rumahTangga._id);
+    const { kodeRt, kategori_usaha, lokasi_tempat_usaha, skala_usaha } = filters;
+
+    // Buat query dinamis berdasarkan filter yang diterima
+    const query: { [key: string]: any } = {};
+
+    if (kodeRt && kodeRt !== "all") {
+      query.kodeRt = kodeRt;
+    }
+
+    if (kategori_usaha && kategori_usaha !== "all") {
+      query.kategori_usaha = kategori_usaha;
+    }
+
+    if (lokasi_tempat_usaha && lokasi_tempat_usaha !== "all") {
+      query.lokasi_tempat_usaha = lokasi_tempat_usaha;
+    }
+
+    if (skala_usaha && skala_usaha !== "all") {
+      query.skala_usaha = skala_usaha;
+    }
+
+    // Ambil semua rumah tangga sesuai filter dan hanya ambil field '_id', 'latitude', 'longitude'
+    const rumahTanggaList = await RumahTangga.find(query, { _id: 1, latitude: 1, longitude: 1 });
+
+    return rumahTanggaList.map(rumahTangga => ({
+      id: rumahTangga._id,
+      latitude: rumahTangga.latitude,
+      longitude: rumahTangga.longitude
+    }));
   } catch (error) {
-    throw new Error(`Gagal mendapatkan ID rumah tangga: ${(error as Error).message}`);
+    throw new Error(`Gagal mendapatkan data rumah tangga: ${(error as Error).message}`);
   }
 };
 

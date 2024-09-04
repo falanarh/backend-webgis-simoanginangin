@@ -143,11 +143,19 @@ const getAllRumahTangga = async (req: Request, res: Response) => {
 
 const getAllRumahTanggaIds = async (req: Request, res: Response) => {
   try {
-    const ids = await rumahTanggaService.getAllRumahTanggaIds();
+    const filters = {
+      kodeRt: req.query.kodeRt as string,
+      kategori_usaha: req.query.kategori_usaha as string,
+      lokasi_tempat_usaha: req.query.lokasi_tempat_usaha as string,
+      skala_usaha: req.query.skala_usaha as string
+    };
+
+    const rumahTanggaList = await rumahTanggaService.getAllRumahTanggaIds(filters);
+
     res.status(200).json({
       statusCode: 200,
-      message: "ID RumahTangga fetched successfully",
-      data: ids,
+      message: "RumahTangga data fetched successfully",
+      data: rumahTanggaList,
     });
   } catch (error: any) {
     res.status(500).json({
