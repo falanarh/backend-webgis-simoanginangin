@@ -63,7 +63,7 @@ const RumahTanggaSchema: Schema = new Schema({
   kode: { type: String },
   kodeRt: { type: String, required: true },
   rt_rw_dusun: { type: String, required: true },
-  nama_kepala_keluarga: { type: String, required: true },
+  nama_kepala_keluarga: { type: String },
   no_urut_bangunan: { type: String, required: true },
   alamat: { type: String, required: true },
   nama_usaha: { type: String, required: true },
