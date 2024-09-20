@@ -55,15 +55,12 @@ npm install
 
 ## Menjalankan Aplikasi
 
-```
-a. Untuk pengembangan lokal:
-```
+* Untuk pengembangan lokal:
+
 ```bash
 npm run dev
 ```
-```
-b. Untuk build produksi:
-```
+* Untuk build produksi:
 ```bash
 npm run build
 npm start
