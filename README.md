@@ -92,3 +92,7 @@ Untuk melakukan konfigurasi database MongoDB yang digunakan dalam proyek, perlu 
     "password": "string"
   }
   ```
+* **Response:**
+  * **Status Code:**
+    * `201 Created` - Admin berhasil didaftarkan
+    * `500 Internal Server Error` - Terjadi kesalahan pada server
